@@ -1,0 +1,131 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+scalar Int64
+
+enum Role {
+  USER
+  COACH
+}
+
+enum AppointmentAction {
+  APPROVE
+  DECLINE
+}
+
+enum AppointmentStatus {
+  SCHEDULING
+  SCHEDULED
+  CANCELED
+  RESCHEDULING
+  DECLINED
+}
+
+type User {
+  "ID of user"
+  id: Int64!
+  name: String!
+  "Role of user, can be USER or COACH"
+  role: Role!
+  "User timezone"
+  timezone: String!
+  workingHours: [WorkingHour!]
+}
+
+type WorkingHour {
+  id: Int64!
+  userId: Int64!
+  day: String!
+  start: String!
+  end: String!
+}
+
+type Appointment {
+  id: Int64!
+  "User ID of user"
+  userId: Int64!
+  "User ID of COACH user"
+  coachId: Int64!
+  "Appointment status"
+  status: String!
+  "If this field is true, then the appointment is been rescheduled"
+  rescheduled: Boolean!
+  startAt: String!
+  endAt: String!
+  durationMunites: Int!
+}
+
+type UserListResponse {
+  items: [User!]!
+  page: Int!
+  pageSize: Int!
+  total: Int64!
+  totalPage: Int!
+}
+
+input UserAppointmentsRequest {
+  status: [AppointmentStatus!]
+  startDate: String
+  endDate: String
+  tz: String
+}
+
+input MakeAppointmentRequest {
+  """
+  User ID who want to make the appointment.
+  """
+  userId: Int64!
+  """
+  User ID of target coach.
+  """
+  coachId: Int64!
+  """
+  Date time of the appointment.
+  The time will **relative to user timezone**.
+  For example: if the user timezone is `Asia/Jakarta` then the value of `startAt` will be assumed as `Asia/Jakarta`.
+  """
+  startAt: String!
+  """
+  Length of durations of the appointment.
+  """
+  durationMunites: Int!
+}
+
+input RescheduleAppointmentRequest {
+  """
+  ID of the appointment that need to be reschedules.
+  """
+  appointmentID: Int64!
+  """
+  Date time of the appointment.
+  The time will **relative to coach timezone** because only coach can do reschedule.
+  For example: if the coach timezone is `Asia/Jakarta` then the value of `startAt` will be assumed as `Asia/Jakarta`.
+  """
+  startAt: String!
+  """
+  Length of durations of the appointment.
+  """
+  durationMunites: Int!
+}
+
+type Query {
+  userList(page: Int, pageSize: Int): UserListResponse!
+  userWorkingHour(userID: Int64!): [WorkingHour!]!
+  userAppointments(
+    userID: Int64!
+    role: Role!
+    params: UserAppointmentsRequest!
+  ): [Appointment!]!
+}
+
+type Mutation {
+  "Make appointment with coach"
+  makeAppointment(input: MakeAppointmentRequest!): Boolean
+  "Update status of appointment to SCHEDULED"
+  approveAppointment(appointmentID: Int64!): Boolean
+  "Update status of appointment to DECLINED"
+  declineAppointment(appointmentID: Int64!): Boolean
+  "Reschedule the appointment"
+  rescheduleAppointment(input: RescheduleAppointmentRequest!): Boolean
+}

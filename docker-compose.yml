@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    ports:
+      - 8080:8081
+    environment:
+      APP_PORT: 8081
+      DB_HOST: db
+      DB_PASSWORD: myrootpassword
+    depends_on:
+      - db
+
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: appointment
+      MYSQL_ROOT_PASSWORD: myrootpassword
